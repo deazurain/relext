@@ -20,10 +20,30 @@ var character = {
 	LF: '\n'.charCodeAt(0),
 	TAB: '\t'.charCodeAt(0),
 	SPACE: ' '.charCodeAt(0),
+	HEADING: '#'.charCodeAt(0),
 	carriage: function(c) { return c == this.CR; },
 	linefeed: function(c) { return c == this.LF; },
-	white: function(c) { return c == this.LF || c == this.TAB || c == this.SPACE; }
+	white: function(c) { return c == this.LF || c == this.TAB || c == this.SPACE; },
+	heading: function(c) { return c == this.HEADING; }
 };
+
+var filter = {
+	// Convert character code to escaped character (string)
+	html: function(c) {
+		return filter.html.table[c] ? filter.html.table[c] : String.fromCharCode(c);
+	}
+};
+
+!(function() {
+	var t = filter.html.table = {};
+	t['<'.charCodeAt(0)] = '&lt;';
+	t['>'.charCodeAt(0)] = '&gt;';
+	t['&'.charCodeAt(0)] = '&amp;';
+	t['"'.charCodeAt(0)] = '&quot;';
+	t["'".charCodeAt(0)] = '&#039;';
+}());
+
+console.log(filter.html);
 
 var parser = {};
 
@@ -61,11 +81,13 @@ parser.parse = function() {
 		switch (state) {
 		case 'skip':
 			if (character.white(x)) {
-			} else {
+			} else if (character.heading(x)) {
+				state = 'heading1';
+			}	else {
 				n = {
 					type: 'paragraph',
 					line: l, column: c,
-					contents: String.fromCharCode(x)
+					contents: filter.html(x)
 				};
 				state = 'paragraph';
 			}
@@ -76,7 +98,7 @@ parser.parse = function() {
 			} else if (character.white(x)) {
 				state = 'paragraph-white';
 			} else {
-				n.contents += String.fromCharCode(x);
+				n.contents += filter.html(x);
 			}
 			break;
 		case 'paragraph-enter':
@@ -86,7 +108,7 @@ parser.parse = function() {
 				state = 'skip';
 			} else if (character.white(x)) {
 			} else {
-				n.contents += ' ' + String.fromCharCode(x);
+				n.contents += ' ' + filter.html(x);
 				state = 'paragraph';
 			}
 			break;
@@ -95,8 +117,91 @@ parser.parse = function() {
 				state = 'paragraph-enter';
 			} else if (character.white(x)) {
 			} else {
-				n.contents += ' ' + String.fromCharCode(x);
+				n.contents += ' ' + filter.html(x);
 				state = 'paragraph';
+			}
+			break;
+		case 'heading1':
+			if (character.linefeed(x)) {
+				t.push({
+					type: 'heading1',
+					line: l, column: c,
+					contents: ''
+				});
+				state = 'skip';
+			} else if (character.white(x)) {
+				n = {
+					type: 'heading1',
+					line: l, column: c,
+					contents: ''
+				};
+				state = 'heading-skip';
+			} else if (character.heading(x)) {
+				state = 'heading2';
+			} else {
+				n = {
+					type: 'heading1',
+					line: l, column: c,
+					contents: filter.html(x)
+				};
+				state = 'heading';
+			}
+			break;
+		case 'heading2':
+			if (character.linefeed(x)) {
+				t.push({
+					type: 'heading2',
+					line: l, column: c,
+					contents: ''
+				});
+				state = 'skip';
+			} else if (character.white(x)) {
+				n = {
+					type: 'heading2',
+					line: l, column: c,
+					contents: ''
+				};
+				state = 'heading-skip';
+			} else {
+				n = {
+					type: 'heading2',
+					line: l, column: c,
+					contents: filter.html(x)
+				};
+				state = 'heading';
+			}
+			break;
+		case 'heading-skip':
+			if (character.linefeed(x)) {
+				t.push(n);
+				n = undefined;
+				state = 'skip';
+			} else if (character.white(x)) {
+			} else {
+				n.contents += filter.html(x);
+				state = 'heading';
+			}
+			break;
+		case 'heading-white':
+			if (character.linefeed(x)) {
+				t.push(n);
+				n = undefined;
+				state = 'skip';
+			} else if (character.white(x)) {
+			} else {
+				n.contents += ' ' + filter.html(x);
+				state = 'heading';
+			}
+			break;
+		case 'heading':
+			if (character.linefeed(x)) {
+				t.push(n);
+				n = undefined;
+				state = 'skip';
+			} else if (character.white(x)) {
+				state = 'heading-white';
+			} else {
+				n.contents += filter.html(x);
 			}
 			break;
 		}
@@ -121,20 +226,31 @@ compiler.compile = function() {
 	post = fs.readFileSync('post.txt', 'utf8');
 
 	for (var i = 0, l = t.length; i < l; i++) {
-		mid += '<p>' + t[i].contents + '</p>\n';
+		var n = t[i];
+		switch (n.type) {
+			case 'paragraph':
+				mid += '<p data-line="' + n.line + '" data-column="' + n.column + '">' + n.contents + '</p>\n';
+				break;
+			case 'heading1':
+				mid += '<h1 data-line="' + n.line + '" data-column="' + n.column + '">' + n.contents + '</h1>\n';
+				break;
+			case 'heading2':
+				mid += '<h2 data-line="' + n.line + '" data-column="' + n.column + '">' + n.contents + '</h2>\n';
+				break;
+		}
 	}
 
 	fs.writeFileSync('output.html', pre + mid + post);
 };
 
 fs.readFile('input.relext', function (err, data) {
-	  if (err) { throw err; }
+	if (err) { throw err; }
 
-		parser.data = data;
-		parser.parse();
+	parser.data = data;
+	parser.parse();
 
-		compiler.tree = parser.tree;
-		compiler.compile();
+	compiler.tree = parser.tree;
+	compiler.compile();
 });
 
 

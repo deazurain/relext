@@ -1,5 +1,7 @@
-
-rem ipsum dolor sit amet, consectetur adipiscing elit. Sed tempor, mauris vitae
+# Custom header yeah!
+## and a sub header how cool is that
+rem <script class="resistance-is-futile">evil! &amp;</script>. And then I said:
+'What about the single quotes?' ipsum dolor sit amet, consectetur adipiscing elit. Sed tempor, mauris vitae
 ullamcorper bibendum, erat massa interdum risus, quis condimentum lacus felis
 sed arcu. Sed tempor rhoncus nibh, a sodales nibh iaculis at. Duis erat mauris,
 lacinia eu egestas vel, blandit ac massa. Aliquam dui purus, porta sit amet
@@ -12,6 +14,8 @@ varius fringilla tortor. Integer quis ligula quam. Aenean non felis non libero
 porttitor consequat id in erat. Praesent a justo pulvinar quam tincidunt
 congue. Nunc eleifend aliquet imperdiet.
 
+## some # more lorum ipsum     extra spaces before me but you can't see that
+right?
 Vestibulum cursus erat vel elit dignissim sit amet pharetra mi accumsan. Nullam
 vitae lorem turpis, nec accumsan magna. Sed nibh augue, pellentesque nec
 condimentum vitae, viverra quis justo. Curabitur ut tellus nibh. Aenean ligula
@@ -24,6 +28,7 @@ ipsum, auctor quis rhoncus sed, vestibulum eu odio. Donec est augue, gravida
 quis consectetur a, dapibus nec ligula. Sed sodales auctor suscipit. Phasellus
 tempor hendrerit dignissim.
 
+# rem <script class="resistance-is-futile">evil! &amp;</script>. And then I said:
 Aenean accumsan lacinia purus. Sed eu turpis nisi, quis fermentum risus. Donec
 quis placerat nibh. Integer dictum enim quis nunc porttitor sed mollis ante
 consectetur. Suspendisse eleifend lobortis dolor, nec hendrerit massa interdum
